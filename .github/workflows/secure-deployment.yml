@@ -11,15 +11,21 @@ jobs:
     name: SonarQube Analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-github-action@master
+        uses: sonarsource/sonarqube-github-action@v2.0.2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -28,9 +34,17 @@ jobs:
     needs: sonarqube-analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
       - name: Install dependencies
         run: npm install
+
       - name: Run unit tests
         run: npm test
 
@@ -38,17 +52,23 @@ jobs:
     needs: unit-tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Run static analysis
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run ESLint static analysis
         run: npm run lint
+
       - name: Check for vulnerabilities
-        run: npm audit
+        run: npm audit --audit-level=high
 
   deploy:
     needs: security-checks
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Deploy to production
         run: echo "Deployment to production would happen here"
+cl
